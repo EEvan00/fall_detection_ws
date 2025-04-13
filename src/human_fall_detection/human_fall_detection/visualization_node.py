@@ -37,15 +37,7 @@ class VisualizationNode(Node):
             self.furniture_callback,
             10
         )
-        '''
-        # Subscriber for camera raw image
-        self.camera_subscription = self.create_subscription(
-            Image,
-            'camera/image_raw',
-            self.camera_callback,
-            10
-        )'''
-        
+
         # Subscriber for fall detection
         self.fall_subscription = self.create_subscription(
             Bool,
@@ -86,14 +78,14 @@ class VisualizationNode(Node):
             self.last_furniture_update_time = self.get_clock().now()
         except Exception as e:
             self.get_logger().error(f'Error processing furniture data: {str(e)}')
-    '''
+
     def camera_callback(self, msg):
         try:
             # Convert ROS Image message to OpenCV image (as backup)
             self.latest_camera_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
         except Exception as e:
             self.get_logger().error(f'Error processing camera image: {str(e)}')
-    '''
+
     def fall_callback(self, msg):
         """Callback for fall detection alerts"""
         if msg.data:  # If fall is detected

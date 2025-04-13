@@ -43,13 +43,6 @@ class FallDetectionNode(Node):
             10
         )
 
-        # Publisher for person states
-        self.person_state_publisher = self.create_publisher(
-            String,
-            'human/person_states',
-            10
-        )
-        
         # Subscribe to furniture detection
         self.furniture_subscription = self.create_subscription(
             String,
@@ -92,9 +85,6 @@ class FallDetectionNode(Node):
                 # Update person state
                 self.person_states[person_id] = person_state
                 
-                # Calculate person's bounding box
-                # person_bbox = self.calculate_person_bbox(keypoints)
-                
                 # Check if person is on furniture
                 on_furniture = self.is_person_on_furniture(person_bbox)
                 if on_furniture:
@@ -132,21 +122,6 @@ class FallDetectionNode(Node):
         except Exception as e:
             self.get_logger().error(f'Error processing pose data: {str(e)}')
     
-    def publish_person_states(self):
-        """Publish person states for visualization"""
-        if self.person_states:
-            try:
-                # Convert Enum to int for JSON serialization
-                states_data = {str(person_id): person_state.value 
-                              for person_id, person_state in self.person_states.items()}
-                
-                # Create and publish message
-                msg = String()
-                msg.data = json.dumps(states_data)
-                self.person_state_publisher.publish(msg)
-            except Exception as e:
-                self.get_logger().error(f'Error publishing person states: {str(e)}')
-
     def analyze_pose(self, keypoints):
         # Keypoints structure in YOLOv8:
         # 0: nose, 1: left_eye, 2: right_eye, 3: left_ear, 4: right_ear, 
@@ -236,34 +211,7 @@ class FallDetectionNode(Node):
                 return PersonState.LYING
         else:
             return PersonState.UNKNOWN
-    '''    
-    def calculate_person_bbox(self, keypoints):
-        """Calculate a bounding box around the person from keypoints"""
-        # Filter out low-confidence keypoints
-        valid_keypoints = [kp for kp in keypoints if kp[2] >= 0.3]
-        
-        if not valid_keypoints:
-            return [0, 0, 0, 0]  # Default bbox if no valid keypoints
-        
-        # Extract x, y coordinates from valid keypoints
-        x_coords = [kp[0] for kp in valid_keypoints]
-        y_coords = [kp[1] for kp in valid_keypoints]
-        
-        # Calculate bounding box
-        x1 = min(x_coords)
-        y1 = min(y_coords)
-        x2 = max(x_coords)
-        y2 = max(y_coords)
-        
-        # Add a small margin
-        margin = 10
-        x1 = max(0, x1 - margin)
-        y1 = max(0, y1 - margin)
-        x2 += margin
-        y2 += margin
-        
-        return [x1, y1, x2, y2]
-    '''    
+   
     def is_person_on_furniture(self, person_bbox):
         """Check if a person is on or near furniture"""
         if not self.detected_furniture:
@@ -271,9 +219,6 @@ class FallDetectionNode(Node):
         
         # Extract person bounding box
         p_x1, p_y1, p_x2, p_y2 = person_bbox
-        #person_center_x = (p_x1 + p_x2) / 2
-        #person_center_y = (p_y1 + p_y2) / 2
-        #person_bottom_y = p_y2  # Bottom of the person bbox
         
         # Check each furniture item
         for furniture in self.detected_furniture:
@@ -291,9 +236,6 @@ class FallDetectionNode(Node):
             
             # If significant overlap (>85% of person) or person's bottom is on furniture
             if (overlap_area > 0.85 * person_area):
-                #or \
-                #(f_x1 <= person_center_x <= f_x2 and  # Person center x is within furniture width
-                #f_y1 <= person_bottom_y <= f_y2):    # Person bottom is within furniture height
                 return True
         
         return False
@@ -313,84 +255,7 @@ class FallDetectionNode(Node):
                     
             except Exception as e:
                 self.get_logger().error(f'Error processing furniture data: {str(e)}')
-    
-    '''
-    def calculate_center_of_gravity_y(self, keypoints):
-        """Calculate the approximate vertical position of the center of gravity"""
-        # Keypoints structure in YOLOv8:
-        # 0: nose, 5: left_shoulder, 6: right_shoulder, 11: left_hip, 12: right_hip
-        
-        # Check if we have the necessary keypoints
-        if len(keypoints) < 17:
-            return None
-            
-        # Extract relevant keypoints
-        nose = keypoints[0]
-        left_shoulder = keypoints[5]
-        right_shoulder = keypoints[6]
-        left_hip = keypoints[11]
-        right_hip = keypoints[12]
-        
-        # Confidence check
-        min_confidence = 0.3
-        key_points = [nose, left_shoulder, right_shoulder, left_hip, right_hip]
-        if any(kp[2] < min_confidence for kp in key_points):
-            return None
-            
-        # Calculate CoG as weighted average of key points
-        # The CoG is approximately between the shoulders and hips, closer to the hips
-        shoulders_y = (left_shoulder[1] + right_shoulder[1]) / 2
-        hips_y = (left_hip[1] + right_hip[1]) / 2
-        
-        # CoG is typically closer to hips than shoulders (about 2/3 of the way down from head to feet)
-        cog_y = (shoulders_y + 2 * hips_y) / 3
-        
-        return cog_y
-        
-    def update_position_history(self, person_id, cog_y, timestamp):
-        """Update the position history for the given person"""
-        if cog_y is None:
-            return
-            
-        # Initialize history if this is a new person
-        if person_id not in self.position_history:
-            self.position_history[person_id] = deque(maxlen=self.position_history_size)
-            self.timestamp_history[person_id] = deque(maxlen=self.position_history_size)
-            
-        # Add new position and timestamp
-        self.position_history[person_id].append(cog_y)
-        self.timestamp_history[person_id].append(timestamp)
-    
-    def calculate_vertical_speed(self, person_id):
-        """Calculate the vertical speed based on position history"""
-        if (person_id not in self.position_history or 
-            len(self.position_history[person_id]) < 2):
-            self.vertical_speeds[person_id] = 0.0
-            return 0.0
-            
-        # Get the oldest and newest positions and timestamps
-        oldest_pos = self.position_history[person_id][0]
-        newest_pos = self.position_history[person_id][-1]
-        oldest_time = self.timestamp_history[person_id][0]
-        newest_time = self.timestamp_history[person_id][-1]
-        
-        # Calculate time difference
-        time_diff = newest_time - oldest_time
-        if time_diff <= 0:
-            self.vertical_speeds[person_id] = 0.0
-            return 0.0
-            
-        # Calculate position difference (positive value means moving down)
-        pos_diff = newest_pos - oldest_pos
-        
-        # Calculate speed in pixels per second
-        speed = abs(pos_diff) / time_diff
-        
-        # Store and return the speed
-        self.vertical_speeds[person_id] = speed
-        return speed
-    '''
-     
+      
     def publish_fall_alert(self):
         msg = Bool()
         msg.data = True

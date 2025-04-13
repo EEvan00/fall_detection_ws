@@ -47,15 +47,6 @@ class ObjectDetectionNode(Node):
             10
         )
 
-        '''
-        # Publisher for annotated image
-        self.annotated_image_publisher = self.create_publisher(
-            Image,
-            'detection/annotated_image',
-            10
-        )
-        '''
-
         # CV bridge for converting between OpenCV and ROS image formats
         self.bridge = CvBridge()
         
@@ -71,15 +62,6 @@ class ObjectDetectionNode(Node):
             
             # Process and publish results
             self.process_and_publish_results(results)
-
-            """ 
-            # Publish annotated image
-            if results and len(results) > 0:
-                annotated_image = results[0].plot()
-                # Convert back to ROS Image
-                ros_annotated_image = self.bridge.cv2_to_imgmsg(annotated_image, encoding='bgr8')
-                self.annotated_image_publisher.publish(ros_annotated_image)
-            """
             
             # Display the output if configured
             if self.display_output:
@@ -99,7 +81,7 @@ class ObjectDetectionNode(Node):
             # Get the first result
             result = results[0]
             
-            # YOLOv8 detection model returns boxes, class IDs, and confidences
+            # YOLO11n detection model returns boxes, class IDs, and confidences
             if hasattr(result, 'boxes') and result.boxes is not None:
                 boxes = result.boxes
                 

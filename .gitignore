@@ -1,0 +1,8 @@
+/build
+/install
+/log
+/venv
+/yolo11n-pose.pt
+/yolo11n.pt
+/yolov8n-pose.pt
+/.vscode

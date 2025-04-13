@@ -1,0 +1,38 @@
+camera_node:
+  ros__parameters:
+    camera_id: 0
+    frame_rate: 30.0
+    image_width: 640
+    image_height: 480
+
+pose_detection_node:
+  ros__parameters:
+    model_path: '/home/test/fall_detection_ws/yolo11n-pose.pt'
+    confidence_threshold: 0.5
+    display_output: False
+
+object_detection_node:
+  ros__parameters:
+    model_path: '/home/test/fall_detection_ws/yolo11n.pt'
+    confidence_threshold: 0.5
+    display_output: False
+    furniture_classes: ['bed', 'couch', 'bench']
+
+fall_detection_node:
+  ros__parameters:
+    fall_detection_threshold: 0.7
+    fall_confirmation_frames: 5
+    time_between_alerts: 10.0
+
+visualization_node:
+  ros__parameters:
+    window_width: 640
+    window_height: 480
+    display_output: True
+
+alarm_node:
+  ros__parameters:
+    play_sound: true
+    sound_file: '/usr/share/sounds/freedesktop/stereo/alarm-clock-elapsed.oga'
+    message: 'ALERT: Human fall detected!'
+    cooldown_time: 10.0

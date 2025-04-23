@@ -19,12 +19,10 @@ class FallDetectionNode(Node):
         super().__init__('fall_detection_node')
         
         # Declare parameters
-        self.declare_parameter('fall_detection_threshold', 0.7)  # Threshold for determining a fall
         self.declare_parameter('fall_confirmation_frames', 5)    # Number of frames to confirm a fall
         self.declare_parameter('time_between_alerts', 10.0)      # Minimum time between alerts in seconds
         
         # Get parameters
-        self.fall_detection_threshold = self.get_parameter('fall_detection_threshold').value
         self.fall_confirmation_frames = self.get_parameter('fall_confirmation_frames').value
         self.time_between_alerts = self.get_parameter('time_between_alerts').value
         
@@ -89,7 +87,14 @@ class FallDetectionNode(Node):
                 on_furniture = self.is_person_on_furniture(person_bbox)
                 if on_furniture:
                     self.get_logger().debug(f'Person {person_id} is on furniture')
-                
+                    
+                # Correct state if detected as FALLEN but is on furniture
+                if person_state == PersonState.FALLEN and on_furniture:
+                    person_state = PersonState.LYING
+                    
+                # Update person state in the dictionary
+                self.person_states[person_id] = person_state
+
                 # Check if person has fallen (static pose analysis) AND is NOT on furniture
                 if person_state == PersonState.FALLEN and not on_furniture:
                     # Initialize counter if it doesn't exist
@@ -201,14 +206,7 @@ class FallDetectionNode(Node):
             return PersonState.SITTING
         elif angle_degrees > 45 and aspect_ratio > 1.0:
             # Lying or fallen position
-            # Additional check for fall: are all keypoints at similar height/y-coordinate?
-            y_std = np.std([nose[1], shoulders_center[1], hips_center[1], ankles_center[1]])
-            normalized_y_std = y_std / height if height > 0 else 1.0
-            
-            if normalized_y_std < self.fall_detection_threshold:
-                return PersonState.FALLEN
-            else:
-                return PersonState.LYING
+            return PersonState.FALLEN
         else:
             return PersonState.UNKNOWN
    

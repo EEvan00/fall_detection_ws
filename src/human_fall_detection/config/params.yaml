@@ -20,7 +20,6 @@ object_detection_node:
 
 fall_detection_node:
   ros__parameters:
-    fall_detection_threshold: 0.7
     fall_confirmation_frames: 5
     time_between_alerts: 10.0
 

@@ -5,6 +5,7 @@ from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 import cv2
 import json
+import time
 from std_msgs.msg import String
 from ultralytics import YOLO
 
@@ -22,6 +23,10 @@ class PoseDetectionNode(Node):
         self.confidence_threshold = self.get_parameter('confidence_threshold').value
         self.display_output = self.get_parameter('display_output').value
         
+        # FPS calculation variables
+        self.prev_time = 0
+        self.fps = 0
+
         # Initialize YOLO model
         try:
             self.model = YOLO(self.model_path)
@@ -59,6 +64,9 @@ class PoseDetectionNode(Node):
     
     def image_callback(self, msg):
         try:
+            # Start time
+            start_time = time.time()
+
             # Convert ROS Image message to OpenCV image
             cv_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
             
@@ -71,6 +79,21 @@ class PoseDetectionNode(Node):
             # Publish annotated image
             if results and len(results) > 0:
                 annotated_image = results[0].plot()
+
+                # Calculate FPS
+                end_time = time.time()
+                processing_time = end_time - start_time
+                self.fps = 1 / processing_time if processing_time > 0 else 0
+
+                # Draw FPS on the image
+                fps_text = f"FPS: {self.fps:.2f}"
+                org = (10, 30) # Top-left corner coordinates
+                font = cv2.FONT_HERSHEY_SIMPLEX
+                fontScale = 1
+                color = (255, 255, 255) # black color
+                thickness = 2
+                cv2.putText(annotated_image, fps_text, org, font, fontScale, color, thickness, cv2.LINE_AA)
+
                 # Convert back to ROS Image
                 ros_annotated_image = self.bridge.cv2_to_imgmsg(annotated_image, encoding='bgr8')
                 self.annotated_image_publisher.publish(ros_annotated_image)

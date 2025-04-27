@@ -90,7 +90,7 @@ class PoseDetectionNode(Node):
                 org = (10, 30) # Top-left corner coordinates
                 font = cv2.FONT_HERSHEY_SIMPLEX
                 fontScale = 1
-                color = (255, 255, 255) # black color
+                color = (255, 255, 255) # white color
                 thickness = 2
                 cv2.putText(annotated_image, fps_text, org, font, fontScale, color, thickness, cv2.LINE_AA)
 

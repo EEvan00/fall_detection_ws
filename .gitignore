@@ -2,8 +2,16 @@
 /install
 /log
 /venv
-/yolo11n-pose.pt
-/yolo11n.pt
-/yolov8n-pose.pt
 /.vscode
 /screenshots
+
+# model files
+/yolo11n.pt
+/yolo11n-pose.pt
+/yolov8n-pose.pt
+
+# Pycache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd

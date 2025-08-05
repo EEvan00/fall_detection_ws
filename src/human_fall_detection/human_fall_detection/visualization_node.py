@@ -6,6 +6,8 @@ from std_msgs.msg import String, Bool
 from cv_bridge import CvBridge
 import json
 import cv2
+import os
+from datetime import datetime
 from ultralytics.utils.plotting import Annotator
 
 class VisualizationNode(Node):
@@ -45,7 +47,14 @@ class VisualizationNode(Node):
             self.fall_callback,
             10
         )
-        
+
+        # Publisher for visualization output
+        self.image_publisher = self.create_publisher(
+            Image,
+            '/fall_detection/image',
+            10
+        )
+
         # CV bridge for converting between OpenCV and ROS image formats
         self.bridge = CvBridge()
         
@@ -56,6 +65,7 @@ class VisualizationNode(Node):
         self.latest_camera_image = None
         self.fall_detected = False
         self.fall_alert_time = None
+        self.fall_image_saved = False
         
         # Initialize timer for visualization
         timer_period = 0.033  # Update at approximately 30 Hz
@@ -90,8 +100,23 @@ class VisualizationNode(Node):
         """Callback for fall detection alerts"""
         if msg.data:  # If fall is detected
             self.fall_detected = True
+            self.fall_image_saved = False
             self.fall_alert_time = self.get_clock().now()
             self.get_logger().info('Fall alert received, updating visualization')
+
+            # Save a screenshot of the current pose image if available
+            if self.latest_pose_image is not None and not self.fall_image_saved:
+                # Create directory for screenshots if it doesn't exist
+                date_str = datetime.now().strftime('%Y-%m-%d')
+                dir_path = os.path.join('screenshots', date_str)
+                os.makedirs(dir_path, exist_ok=True)
+
+                # Save the image with a timestamp
+                timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+                filename = os.path.join(dir_path, f'fall_{timestamp}.jpg')
+                cv2.imwrite(filename, self.latest_pose_image)
+                self.get_logger().info(f'Fall snapshot saved: {filename}')
+                self.fall_image_saved = True
     
     def visualize(self):
         """Display pose visualization and add fall alert if needed"""
@@ -135,10 +160,14 @@ class VisualizationNode(Node):
             if time_since_update > 0.5:  # Clear if older than 0.5 second
                 self.latest_furniture = []
 
+        # Publish the visualization image
+        ros_image_msg = self.bridge.cv2_to_imgmsg(display_image, encoding='bgr8')
+        self.image_publisher.publish(ros_image_msg)
+
         # Display the visualization
-        if self.display_output:
-            cv2.imshow('Fall Detection Visualization', display_image)
-            cv2.waitKey(1)
+        #if self.display_output:
+        #    cv2.imshow('Fall Detection Visualization', display_image)
+        #    cv2.waitKey(1)
 
     def draw_furniture(self, image):
         """Draw furniture bounding boxes on the image using YOLO11's Annotator"""

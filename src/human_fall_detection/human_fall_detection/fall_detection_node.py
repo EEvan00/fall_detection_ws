@@ -198,10 +198,10 @@ class FallDetectionNode(Node):
         normalized_dispersion = vert_dispersion / height if height > 0 else 0
         
         # Determine state based on all factors
-        if angle_degrees < 30 and aspect_ratio < 0.8 and normalized_dispersion > 0.3:
+        if angle_degrees < 27 and aspect_ratio < 0.8 and normalized_dispersion > 0.3:
             # Upright position
             return PersonState.STANDING
-        elif angle_degrees < 45 and aspect_ratio < 1.0:
+        elif angle_degrees < 35 and aspect_ratio < 1.0:
             # Sitting position (slightly angled)
             return PersonState.SITTING
         elif angle_degrees > 45 and aspect_ratio > 1.0:
@@ -232,8 +232,8 @@ class FallDetectionNode(Node):
             overlap_area = x_overlap * y_overlap
             person_area = (p_x2 - p_x1) * (p_y2 - p_y1)
             
-            # If significant overlap (>85% of person) or person's bottom is on furniture
-            if (overlap_area > 0.85 * person_area):
+            # If significant overlap (>88% of person) or person's bottom is on furniture
+            if (overlap_area > 0.88 * person_area):
                 return True
         
         return False

@@ -16,6 +16,7 @@ This project is a real-time human fall detection system built using ROS 2, Pytho
 <p align="center">
   <img src="images/test.gif" alt="test gif"/>
 </p>
+
 The GIF above demonstrates how the system detects a fall. The current FPS is displayed in the top-left corner. The subject is enclosed in a blue bounding box along with human body keypoints, while furniture (e.g., a bed) is enclosed in a green bounding box. When a fall is detected, a red banner appears at the top of the screen displaying the message "ALERT: FALL DETECTED!" accompanied by an alarm sound. The alarm sound file can be customized by modifying the corresponding entry in the `params.yaml` file of the `alarm node`.
 
 ## System Architecture
@@ -38,6 +39,7 @@ GUI file is in `fall_detection_ws/main_gui.tkinter.py`
     *   Displays log output from the ROS nodes.
 
 ![nodes graph](images/rosgraph.png)
+
 ## Prerequisites
 This fall detection system was tested on these environment and requirements:
 *   Macbook Pro with M3 Pro chip
@@ -124,6 +126,7 @@ You can also run the ROS 2 launch file directly without the GUI.
     ```
 
 ## Fall Detection Algorithm
+
 ![page1](images/page1.png)
 ![page2](images/page2.png)
 
@@ -177,6 +180,7 @@ Reboot the system.
 We categorized falls into four distinct types \cite{Alam}: forward, backward, left-side, and right-side. Fall simulations were conducted using a single subject. A camera was positioned approximately 180 cm above the ground at an angle of about 60 degrees to capture the floor area to simulate the surveillance. For the left-side and right-side falls, the subject stood near one side of the frame facing the camera, and performed simulated side falls onto a black mat. For the forward and backward falls, the subject stood with their side facing the camera. For normal daily activities, we imitate the four most frequent activities: standing still, walking around, sitting on a chair, and lying on the bed. 
 
 The results are shown in Table IV. The Fig. 5 visualizes the fall detection results while Fig. 6 demonstrates the normal activity showcases.
+
 <p align="center">
   <img src="images/results.png" alt="results" width="50%"/>
 </p>
@@ -186,6 +190,7 @@ The results are shown in Table IV. The Fig. 5 visualizes the fall detection resu
 </p>
 
 Table V presents that the fall detection system achieved a high accuracy of 95.4%.
+
 <p align="center">
   <img src="images/evaluation.png" alt="evaluation" width="50%"/>
 </p>

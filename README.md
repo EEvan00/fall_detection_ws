@@ -17,6 +17,7 @@ This project is a real-time human fall detection system built using ROS 2, Pytho
   <img src="images/test.gif" alt="test gif"/>
 </p>
 The GIF above demonstrates how the system detects a fall. The current FPS is displayed in the top-left corner. The subject is enclosed in a blue bounding box along with human body keypoints, while furniture (e.g., a bed) is enclosed in a green bounding box. When a fall is detected, a red banner appears at the top of the screen displaying the message "ALERT: FALL DETECTED!" accompanied by an alarm sound. The alarm sound file can be customized by modifying the corresponding entry in the `params.yaml` file of the `alarm node`.
+
 ## System Architecture
 
 The system consists of several ROS 2 nodes that communicate via topics. The nodes are in `fall_detection_ws/src/human_fall_detection/human_fall_detection/`. The params can be adjusted in `fall_detection_ws/src/human_fall_detection/config/`
